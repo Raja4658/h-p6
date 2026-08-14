@@ -4,33 +4,25 @@ import numpy as np
 import threading
 
 class DuplicateChecker:
-    def __init__(self, threshold=0.85):
-        # Using a tiny and fast sentence transformer model
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
-        self.threshold = threshold
-        # In-memory storage for MVP. In production, this would be a Vector DB like Chroma/FAISS.
-        self.past_embeddings = [] # List of tuples: (submission_id, embedding)
+    def __init__(self, limit=0.85):
+        self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
+        self.limit = limit
+        self.history = [] 
         self.lock = threading.Lock()
     
-    def check_duplicate(self, submission_id: str, answer_text: str) -> bool:
-        # Generate embedding for the new answer
-        new_embedding = self.model.encode(answer_text)
+    def check_duplicate(self, sub_id: str, text: str) -> bool:
+        emb = self.encoder.encode(text)
         
-        is_duplicate = False
-        
+        flag = False
         with self.lock:
-            if self.past_embeddings:
-                # Extract all past embeddings into a matrix
-                past_embs = np.array([emb for _, emb in self.past_embeddings])
+            if len(self.history) > 0:
+                past_embs = np.array([e for _, e in self.history])
+                sim = cosine_similarity([emb], past_embs)[0]
                 
-                # Calculate cosine similarity between new embedding and all past embeddings
-                similarities = cosine_similarity([new_embedding], past_embs)[0]
-                
-                # Check if any similarity exceeds the threshold
-                if np.any(similarities >= self.threshold):
-                    is_duplicate = True
+                if np.any(sim >= self.limit):
+                    flag = True
             
-            # Store the current submission
-            self.past_embeddings.append((submission_id, new_embedding))
+            # save for next time
+            self.history.append((sub_id, emb))
             
-        return is_duplicate
+        return flag

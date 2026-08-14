@@ -6,67 +6,49 @@ from schemas import EvaluationRequest, EvaluationResponse
 from ai_engine import AIEngine
 from duplicate_checker import DuplicateChecker
 
-# Global instances (will be initialized on startup)
-ai_engine = None
-duplicate_checker = None
+evaluator = None
+checker = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup logic
-    global ai_engine, duplicate_checker
+    global evaluator, checker
     try:
-        ai_engine = AIEngine()
-        duplicate_checker = DuplicateChecker()
-    except Exception as e:
-        print(f"Error during startup initialization: {e}")
+        evaluator = AIEngine()
+        checker = DuplicateChecker()
+    except Exception as err:
+        print("startup error:", err)
     yield
-    # Shutdown logic
-    pass
+    # clean up if needed
 
-app = FastAPI(
-    title="Lightweight Model for Assignment & Assessment Evaluation MVP",
-    description="Backend API for rubric-based scoring without external APIs.",
-    version="1.0.0",
-    lifespan=lifespan
-)
+app = FastAPI(title="Vira Tech - Auto Grader API")
 
 @app.get("/api/v1/health")
-def health_check():
-    """
-    Health check endpoint to ensure the service is running.
-    """
-    status = "healthy" if ai_engine is not None and duplicate_checker is not None else "degraded"
-    return {"status": status}
+def ping():
+    if evaluator and checker:
+        return {"status": "ok"}
+    return {"status": "starting"}
 
 @app.post("/api/v1/evaluate", response_model=EvaluationResponse)
-def evaluate_submission(request: EvaluationRequest):
-    """
-    Endpoint to evaluate a student's submission.
-    """
-    if ai_engine is None or duplicate_checker is None:
-        raise HTTPException(status_code=503, detail="AI Engine is still initializing. Please try again in a moment.")
+def grade_answer(req: EvaluationRequest):
+    if not evaluator:
+        raise HTTPException(status_code=503, detail="still loading ai model...")
 
-    # 1. Check for duplicates
-    is_duplicate = duplicate_checker.check_duplicate(
-        submission_id=request.submission_id,
-        answer_text=request.answer_text
+    # check plagiarism first
+    is_copied = checker.check_duplicate(req.submission_id, req.answer_text)
+    
+    # get marks from llm
+    marks, max_marks, comments = evaluator.evaluate_answer(
+        q_id=req.question_id,
+        ans_text=req.answer_text,
+        r_id=req.rubric_id
     )
     
-    # 2. Evaluate using AI Engine
-    score, max_score, feedback = ai_engine.evaluate_answer(
-        question_id=request.question_id,
-        answer_text=request.answer_text,
-        rubric_id=request.rubric_id
-    )
-    
-    # Return formatted response
     return EvaluationResponse(
-        score=score,
-        max_score=max_score,
-        feedback=feedback,
-        duplicate_flag=is_duplicate
+        score=marks,
+        max_score=max_marks,
+        feedback=comments,
+        duplicate_flag=is_copied
     )
 
 if __name__ == "__main__":
-    # Run the server locally
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

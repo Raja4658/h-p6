@@ -2,71 +2,62 @@ import json
 import torch
 from transformers import pipeline
 
+# dict acts as our fake database for MVP
+DB_MOCK = {
+    "q1": "What is Supervised Learning? Explain with an example.",
+    "r1": "Total marks: 10. Needs definition of supervised learning (4 marks), mentioning labeled data (3 marks), and one valid example like spam detection or house price prediction (3 marks)."
+}
+
 class AIEngine:
     def __init__(self):
-        # Using a very small model for MVP that can run on CPU easily with Transformers
-        # SmolLM2 is extremely lightweight and fast
-        model_id = "HuggingFaceTB/SmolLM2-360M-Instruct"
-        
-        print("Initializing AI Engine with Transformers. This will download the model (~700MB)...")
-        # Load the pipeline for text generation
+        print("booting up transformers...")
         self.pipe = pipeline(
             "text-generation",
-            model=model_id,
-            torch_dtype=torch.float32 # use float32 for CPU compatibility
+            model="HuggingFaceTB/SmolLM2-360M-Instruct",
+            torch_dtype=torch.float32 
         )
-        print("AI Engine initialized successfully!")
+        print("ready")
 
-    def evaluate_answer(self, question_id: str, answer_text: str, rubric_id: str):
-        mock_question = "Explain the process of photosynthesis."
-        mock_rubric = "Max Score 10. Award points for mentioning: Light energy (2), Chloroplasts (2), Water and Carbon Dioxide (3), Glucose and Oxygen (3)."
+    def evaluate_answer(self, q_id: str, ans_text: str, r_id: str):
+        # grab the question and rubric from our dummy db
+        question = DB_MOCK.get(q_id, "Explain the topic.")
+        rubric = DB_MOCK.get(r_id, "Max 10 marks. Be relevant.")
         
-        # System prompt with strict JSON instructions
-        system_prompt = (
-            "You are an expert AI grader. Evaluate the student's answer based on the rubric. "
-            "You MUST output ONLY a valid JSON object in this format, nothing else:\n"
-            '{"score": 8.0, "max_score": 10.0, "feedback": "Good answer but missed light energy."}'
+        sys_prompt = (
+            "You are a strict teacher grading an exam. "
+            "You MUST output a valid JSON object in exactly this format without markdown:\n"
+            '{"score": 8.0, "max_score": 10.0, "feedback": "your feedback here"}'
         )
         
-        user_prompt = (
-            f"Question: {mock_question}\n"
-            f"Rubric: {mock_rubric}\n"
-            f"Student Answer: {answer_text}\n"
-        )
+        user_prompt = f"Q: {question}\nRubric: {rubric}\nAns: {ans_text}\nEvaluate and give json:"
         
-        messages = [
-            {"role": "system", "content": system_prompt},
+        msg = [
+            {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_prompt}
         ]
         
         try:
-            # Generate response
-            outputs = self.pipe(
-                messages,
+            res = self.pipe(
+                msg,
                 max_new_tokens=150,
                 temperature=0.1,
                 do_sample=False,
             )
             
-            # Extract generated text
-            content = outputs[0]["generated_text"][-1]["content"]
+            raw_out = res[0]["generated_text"][-1]["content"].strip()
             
-            # Clean up the output to parse JSON
-            content = content.strip()
-            if content.startswith("```json"):
-                content = content[7:]
-            if content.startswith("```"):
-                content = content[3:]
-            if content.endswith("```"):
-                content = content[:-3]
+            # basic clean up for json 
+            if raw_out.startswith("```json"):
+                raw_out = raw_out[7:]
+            if raw_out.startswith("```"):
+                raw_out = raw_out[3:]
+            if raw_out.endswith("```"):
+                raw_out = raw_out[:-3]
                 
-            result = json.loads(content)
+            data = json.loads(raw_out.strip())
             
-            score = float(result.get("score", 0.0))
-            max_score = float(result.get("max_score", 10.0))
-            feedback = str(result.get("feedback", "No feedback provided."))
+            return float(data.get("score", 0)), float(data.get("max_score", 10)), str(data.get("feedback", "none"))
             
-            return score, max_score, feedback
         except Exception as e:
-            print(f"Error parsing model output: {e}\nRaw output: {content if 'content' in locals() else 'None'}")
-            return 0.0, 10.0, "Error generating evaluation due to model formatting issue."
+            print("parse error ->", e)
+            return 0.0, 10.0, "parsing failed"

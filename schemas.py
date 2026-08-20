@@ -5,6 +5,10 @@ class EvaluationRequest(BaseModel):
     question_id: str
     answer_text: str
     rubric_id: str
+    
+    # Optional fields for dashboard testing
+    question_text: str | None = None
+    rubric_text: str | None = None
 
 class EvaluationResponse(BaseModel):
     score: float

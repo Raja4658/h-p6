@@ -5,3 +5,6 @@ sentence-transformers
 huggingface-hub
 scikit-learn
 numpy
+
+streamlit
+requests

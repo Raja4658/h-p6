@@ -2,12 +2,6 @@ import json
 import torch
 from transformers import pipeline
 
-# dict acts as our fake database for MVP
-DB_MOCK = {
-    "q1": "What is Supervised Learning? Explain with an example.",
-    "r1": "Total marks: 10. Needs definition of supervised learning (4 marks), mentioning labeled data (3 marks), and one valid example like spam detection or house price prediction (3 marks)."
-}
-
 class AIEngine:
     def __init__(self):
         print("booting up transformers...")
@@ -18,18 +12,15 @@ class AIEngine:
         )
         print("ready")
 
-    def evaluate_answer(self, q_id: str, ans_text: str, r_id: str):
-        # grab the question and rubric from our dummy db
-        question = DB_MOCK.get(q_id, "Explain the topic.")
-        rubric = DB_MOCK.get(r_id, "Max 10 marks. Be relevant.")
+    def evaluate_answer(self, q_text: str, ans_text: str, r_text: str):
         
         sys_prompt = (
             "You are a strict teacher grading an exam. "
             "You MUST output a valid JSON object in exactly this format without markdown:\n"
-            '{"score": 8.0, "max_score": 10.0, "feedback": "your feedback here"}'
+            '{"score": <evaluate_score_out_of_10>, "max_score": 10.0, "feedback": "<short_feedback_1_sentence>"}'
         )
         
-        user_prompt = f"Q: {question}\nRubric: {rubric}\nAns: {ans_text}\nEvaluate and give json:"
+        user_prompt = f"Q: {q_text}\nRubric: {r_text}\nAns: {ans_text}\nEvaluate and give json:"
         
         msg = [
             {"role": "system", "content": sys_prompt},
@@ -39,14 +30,14 @@ class AIEngine:
         try:
             res = self.pipe(
                 msg,
-                max_new_tokens=150,
+                max_new_tokens=75,
                 temperature=0.1,
                 do_sample=False,
             )
             
             raw_out = res[0]["generated_text"][-1]["content"].strip()
             
-            # basic clean up for json 
+            # sometimes the model spits out markdown, need to strip it before parsing
             if raw_out.startswith("```json"):
                 raw_out = raw_out[7:]
             if raw_out.startswith("```"):

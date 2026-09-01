@@ -4,70 +4,152 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vira Tech - AI Auto Grader</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --primary: #3b82f6;
-            --text-main: #f8fafc;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, var(--bg-color), #1e1b4b);
-            color: var(--text-main);
+            background: #0e1117;
+            color: #fafafa;
             min-height: 100vh;
-            margin: 0; padding: 2rem;
-            display: flex; justify-content: center;
         }
-        .container {
-            max-width: 1000px; width: 100%;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+        .header {
+            background: #262730;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #3d3d4e;
         }
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px; padding: 2rem;
+        .header h1 { font-size: 1.6rem; font-weight: 600; }
+        .header p { color: #a3a8b8; font-size: 0.9rem; margin-top: 4px; }
+        .main { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        @media (max-width: 768px) { .main { grid-template-columns: 1fr; } }
+        .section h2 { font-size: 1.2rem; margin-bottom: 1rem; font-weight: 500; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.85rem; color: #a3a8b8; margin-bottom: 6px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 10px 14px;
+            background: #262730; border: 1px solid #3d3d4e;
+            color: #fafafa; border-radius: 6px; font-family: 'Inter', sans-serif;
+            font-size: 0.9rem; outline: none; transition: border 0.2s;
         }
-        h1 { grid-column: 1 / -1; text-align: center; color: #60a5fa; }
-        input, textarea {
-            width: 100%; padding: 0.75rem; margin-bottom: 1rem;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white; border-radius: 8px; box-sizing: border-box;
+        .form-group input:focus, .form-group textarea:focus { border-color: #ff4b4b; }
+        .btn-primary {
+            width: 100%; padding: 12px; background: #ff4b4b; color: white;
+            border: none; border-radius: 6px; font-size: 0.95rem;
+            font-weight: 600; cursor: pointer; transition: background 0.2s;
         }
-        button {
-            width: 100%; background: var(--primary); color: white;
-            padding: 1rem; border: none; border-radius: 8px;
-            font-weight: bold; cursor: pointer;
+        .btn-primary:hover { background: #e03e3e; }
+        .btn-primary:disabled { background: #555; cursor: not-allowed; }
+        .info-box {
+            background: rgba(28, 131, 225, 0.1); border-left: 4px solid #1c83e1;
+            padding: 12px 16px; border-radius: 4px; color: #a3a8b8; font-size: 0.9rem;
         }
-        .results { display: none; margin-top: 1rem; }
+        .success-box {
+            background: rgba(33, 195, 84, 0.1); border-left: 4px solid #21c354;
+            padding: 12px 16px; border-radius: 4px; color: #21c354;
+            font-size: 0.9rem; margin-bottom: 1rem;
+        }
+        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .metric-card {
+            background: #262730; border: 1px solid #3d3d4e;
+            border-radius: 8px; padding: 16px; text-align: center;
+        }
+        .metric-card .label { font-size: 0.8rem; color: #a3a8b8; margin-bottom: 6px; }
+        .metric-card .value { font-size: 1.8rem; font-weight: 700; color: #fafafa; }
+        .feedback-section { margin-bottom: 1.5rem; }
+        .feedback-section h3 { font-size: 1rem; margin-bottom: 8px; font-weight: 500; }
+        .feedback-box {
+            background: rgba(28, 131, 225, 0.1); border-left: 4px solid #1c83e1;
+            padding: 14px 16px; border-radius: 4px; color: #c5cad3;
+            font-size: 0.9rem; line-height: 1.6;
+        }
+        .override-section h3 { font-size: 1rem; margin-bottom: 8px; font-weight: 500; }
+        .override-row { display: flex; gap: 1rem; align-items: end; }
+        .override-row input {
+            flex: 1; padding: 10px 14px; background: #262730;
+            border: 1px solid #3d3d4e; color: #fafafa; border-radius: 6px;
+            font-size: 0.9rem; outline: none;
+        }
+        .btn-save {
+            padding: 10px 24px; background: #262730; color: #fafafa;
+            border: 1px solid #3d3d4e; border-radius: 6px; cursor: pointer;
+            font-size: 0.9rem; transition: all 0.2s;
+        }
+        .btn-save:hover { border-color: #ff4b4b; }
+        .spinner { display: inline-block; width: 20px; height: 20px;
+            border: 3px solid #555; border-top-color: #ff4b4b;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+            vertical-align: middle; margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .results { display: none; }
+        .results.show { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="header">
         <h1>👨‍🏫 Instructor Review Dashboard</h1>
-        <div class="glass-panel">
+        <p>Evaluate student answers using the Vira Tech AI Auto Grader.</p>
+    </div>
+    <div class="main">
+        <div class="section">
             <h2>📝 Submit Assignment</h2>
-            <label>Submission ID</label><input type="text" id="sub_id" value="student_001">
-            <label>Question</label><textarea id="q_text" rows="2">What is Supervised Learning?</textarea>
-            <label>Answer</label><textarea id="ans_text" rows="3">Supervised learning uses labeled data.</textarea>
-            <label>Rubric</label><textarea id="r_text" rows="2">10 marks. Needs definition.</textarea>
-            <button id="eval-btn" onclick="evaluateAnswer()">Evaluate Answer</button>
+            <div class="form-group">
+                <label>Submission ID</label>
+                <input type="text" id="sub_id" value="student_001">
+            </div>
+            <div class="form-group">
+                <label>Question Text</label>
+                <textarea id="q_text" rows="3">What is Supervised Learning? Explain with an example.</textarea>
+            </div>
+            <div class="form-group">
+                <label>Rubric (Criteria)</label>
+                <textarea id="r_text" rows="3">Total marks: 10. Needs definition, mentioning labeled data, and one valid example.</textarea>
+            </div>
+            <div class="form-group">
+                <label>Student's Answer</label>
+                <textarea id="ans_text" rows="3">Supervised learning is a machine learning method where models are trained using labeled data. For example, predicting house prices.</textarea>
+            </div>
+            <button class="btn-primary" id="eval-btn" onclick="evaluateAnswer()">Evaluate Answer</button>
         </div>
-        <div class="glass-panel">
-            <h2>📊 Results</h2>
+        <div class="section">
+            <h2>📊 Evaluation Results</h2>
+            <div id="empty-state" class="info-box">Fill out the details and click Evaluate Answer.</div>
             <div id="results" class="results">
-                <h3>Score: <span id="score" style="color:#10b981"></span></h3>
-                <h3>Copied: <span id="copied" style="color:#f59e0b"></span></h3>
-                <p><b>Feedback:</b> <span id="feedback"></span></p>
+                <div class="success-box">✅ Done!</div>
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="label">Score Awarded</div>
+                        <div class="value" id="score-val">0 / 10</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="label">Is Copied?</div>
+                        <div class="value" id="copy-val">✅ NO</div>
+                    </div>
+                </div>
+                <div class="feedback-section">
+                    <h3>💡 AI Feedback</h3>
+                    <div class="feedback-box" id="feedback-val"></div>
+                </div>
+                <div class="override-section">
+                    <h3>⚙️ Instructor Override</h3>
+                    <div class="override-row">
+                        <input type="number" id="override-score" min="0" max="10" step="0.5" value="0">
+                        <button class="btn-save" onclick="saveScore()">Save Score</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <script>
         async function evaluateAnswer() {
-            document.getElementById('eval-btn').innerText = "Evaluating...";
+            const btn = document.getElementById('eval-btn');
+            const results = document.getElementById('results');
+            const empty = document.getElementById('empty-state');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Evaluating response...';
+            empty.style.display = 'none';
+            results.classList.remove('show');
             const payload = {
                 submission_id: document.getElementById('sub_id').value,
                 question_id: "q1", rubric_id: "r1",
@@ -76,21 +158,39 @@
                 rubric_text: document.getElementById('r_text').value
             };
             try {
-                // Pointing to your Vercel Backend
-                const response = await fetch('/api/v1/evaluate', {
+                const res = await fetch('/api/v1/evaluate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                const data = await response.json();
-                document.getElementById('score').innerText = data.score + " / " + data.max_score;
-                document.getElementById('copied').innerText = data.duplicate_flag ? "⚠️ YES" : "✅ NO";
-                document.getElementById('feedback').innerText = data.feedback;
-                document.getElementById('results').style.display = 'block';
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('score-val').innerText = data.score + ' / ' + data.max_score;
+                    const copyEl = document.getElementById('copy-val');
+                    copyEl.innerText = data.duplicate_flag ? '⚠️ YES' : '✅ NO';
+                    copyEl.style.color = data.duplicate_flag ? '#ffc107' : '#21c354';
+                    document.getElementById('feedback-val').innerText = data.feedback || 'No feedback provided by AI.';
+                    document.getElementById('override-score').value = data.score;
+                    document.getElementById('override-score').max = data.max_score;
+                    results.classList.add('show');
+                } else {
+                    alert('Failed to get a valid response. Status: ' + res.status);
+                    empty.style.display = 'block';
+                }
             } catch (e) {
-                alert("Error connecting to AI Backend.");
+                alert('Looks like the backend API is down. Is uvicorn running?');
+                empty.style.display = 'block';
             }
-            document.getElementById('eval-btn').innerText = "Evaluate Answer";
+            btn.disabled = false;
+            btn.innerText = 'Evaluate Answer';
+        }
+        function saveScore() {
+            const s = document.getElementById('override-score').value;
+            const box = document.createElement('div');
+            box.className = 'success-box';
+            box.innerText = '✅ Score updated to ' + s;
+            document.querySelector('.override-section').appendChild(box);
+            setTimeout(() => box.remove(), 3000);
         }
     </script>
 </body>

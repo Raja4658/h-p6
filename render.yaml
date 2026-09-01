@@ -2,5 +2,6 @@ services:
   - type: web
     name: ai-grader-dashboard
     env: python
+    plan: free
     buildCommand: pip install -r requirements-dashboard.txt
     startCommand: streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0

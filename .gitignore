@@ -73,3 +73,6 @@ run.ps1
 run.sh
 .python-version
 
+
+.vercel
+.env*

@@ -1,0 +1,26 @@
+# Vercel ignores - for reference only
+# NOTE: torch/transformers too large for Vercel (5GB). Use Railway/Render instead.
+# If using Vercel, exclude these and use requirements-vercel.txt + HuggingFace API
+
+.git/
+.gitignore
+.github/
+.vscode/
+.agents/
+.agents/**
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.env
+*.pyc
+*.pyo
+*.pyd
+*.md
+*.ipynb
+*.log
+test_*.py
+run.sh
+run.ps1
+.python-version

@@ -1,26 +1,63 @@
-# Vercel ignores - for reference only
-# NOTE: torch/transformers too large for Vercel (5GB). Use Railway/Render instead.
-# If using Vercel, exclude these and use requirements-vercel.txt + HuggingFace API
-
-.git/
+# Git and version control
+.git
 .gitignore
-.github/
-.vscode/
-.agents/
-.agents/**
-.venv/
-venv/
-__pycache__/
-.pytest_cache/
-.mypy_cache/
-.env
+.github
+
+# Virtual Environments
+venv
+env
+.venv
+ENV
+
+# Python cache and build
+__pycache__
 *.pyc
 *.pyo
 *.pyd
-*.md
-*.ipynb
+*.egg-info
+.eggs
+dist
+build
+.Python
+
+# Development and IDE
+.vscode
+.idea
+.agents
+.DS_Store
+
+# Testing
+.pytest_cache
+.coverage
+.tox
+.hypothesis
+htmlcov
+
+# Caching
+.cache
+.mypy_cache
+.ruff_cache
+.ipynb_checkpoints
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+
+# Build and deployment
+.vercel
+node_modules
+
+# Logs
 *.log
-test_*.py
-run.sh
+
+# Documentation (keep only if needed for app)
+DEPLOY.md
+RAILWAY_DEPLOY.md
 run.ps1
+run.sh
 .python-version
+
+# Development and testing
+test_*.py
+

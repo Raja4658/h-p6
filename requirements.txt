@@ -1,16 +1,4 @@
-# Minimal Vercel-compatible requirements
-# torch and transformers EXCLUDED (too large for Vercel)
-# Uses HuggingFace Inference API for model inference instead
-
 fastapi>=0.110.0
 uvicorn[standard]>=0.30.0
 pydantic>=2.9.0
 requests>=2.32.0
-
-# Optional: These are large and optional
-# Uncomment if you have space and want better duplicate detection:
-# sentence-transformers==2.7.0
-# scikit-learn==1.5.1
-# numpy==1.26.4
-# huggingface-hub>=0.20.0
-

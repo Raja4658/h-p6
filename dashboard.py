@@ -6,7 +6,7 @@ st.set_page_config(page_title="AI Grader Dashboard", layout="wide")
 st.title("👨‍🏫 Instructor Review Dashboard")
 st.markdown("Evaluate student answers using the Vira Tech AI Auto Grader.")
 
-API_URL = "http://127.0.0.1:8000/api/v1/evaluate"
+API_URL = "https://h-p6.vercel.app/api/v1/evaluate"
 
 # Layout
 col1, col2 = st.columns(2)

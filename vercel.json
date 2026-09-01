@@ -1,11 +1,15 @@
 {
-  "runtime": "python@3.11",
-  "buildCommand": "pip install -r requirements-vercel.txt",
-  "outputDirectory": ".",
-  "env": {
-    "HUGGINGFACE_API_TOKEN": {
-      "required": true
+  "version": 2,
+  "builds": [
+    {
+      "src": "main.py",
+      "use": "@vercel/python"
     }
-  }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "main.py"
+    }
+  ]
 }
-

@@ -75,15 +75,19 @@ class AIEngine:
                 else:
                     raw_out = str(result).strip()
             
-            # Parse JSON (same for both modes)
-            if raw_out.startswith("```json"):
-                raw_out = raw_out[7:]
-            if raw_out.startswith("```"):
-                raw_out = raw_out[3:]
-            if raw_out.endswith("```"):
-                raw_out = raw_out[:-3]
+            # Parse JSON using regex to extract object (handles cases where prompt is echoed)
+            import re
+            json_match = re.search(r'\{.*?\}', raw_out, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(0)
+            else:
+                # fallback string cleaning
+                json_str = raw_out.strip()
+                if json_str.startswith("```json"): json_str = json_str[7:]
+                if json_str.startswith("```"): json_str = json_str[3:]
+                if json_str.endswith("```"): json_str = json_str[:-3]
                 
-            data = json.loads(raw_out.strip())
+            data = json.loads(json_str.strip())
             
             return float(data.get("score", 0)), float(data.get("max_score", 10)), str(data.get("feedback", "none"))
             

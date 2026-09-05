@@ -6,7 +6,7 @@ st.set_page_config(page_title="AI Grader Dashboard", layout="wide")
 st.title("👨‍🏫 Instructor Review Dashboard")
 st.markdown("Evaluate student answers using the Vira Tech AI Auto Grader.")
 
-API_URL = "https://h-p6.vercel.app/api/v1/evaluate"
+API_URL = "http://127.0.0.1:8000/api/v1/evaluate"
 
 # Layout
 col1, col2 = st.columns(2)
@@ -59,6 +59,31 @@ with col2:
                     st.subheader("💡 AI Feedback")
                     st.info(data.get('feedback', 'No feedback provided by AI.'))
                     
+                    rel_data = data.get('reliability')
+                    if rel_data:
+                        st.subheader("🛡️ AI Reliability Verification (PS2)")
+                        
+                        v_col1, v_col2 = st.columns(2)
+                        
+                        verdict = rel_data.get('verdict', 'Unknown')
+                        if verdict == "Trustworthy":
+                            v_col1.success(f"Verdict: **{verdict}**")
+                        elif verdict == "Partially Reliable":
+                            v_col1.warning(f"Verdict: **{verdict}**")
+                        else:
+                            v_col1.error(f"Verdict: **{verdict}**")
+                            
+                        r_score = rel_data.get('reliability_score', 0)
+                        v_col2.metric("Reliability Score", f"{r_score}%")
+                        
+                        flags = rel_data.get('flagged_spans', [])
+                        if flags:
+                            st.error("⚠️ Hallucination / Contradiction Detected:")
+                            for flag in flags:
+                                st.markdown(f"- **Flagged Span:** `{flag['text']}`  \n  **Reason:** {flag['reason']}")
+                        else:
+                            st.success("✅ No hallucinations detected in the feedback.")
+                            
                     st.subheader("⚙️ Instructor Override")
                     
                     # making sure the slider doesn't break if score > max

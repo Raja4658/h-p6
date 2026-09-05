@@ -10,8 +10,15 @@ class EvaluationRequest(BaseModel):
     question_text: str | None = None
     rubric_text: str | None = None
 
+class ReliabilityMetrics(BaseModel):
+    reliability_score: float
+    hallucination_probability: float
+    verdict: str
+    flagged_spans: list[dict]
+
 class EvaluationResponse(BaseModel):
     score: float
     max_score: float
     feedback: str
     duplicate_flag: bool
+    reliability: ReliabilityMetrics

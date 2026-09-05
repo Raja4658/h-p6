@@ -60,11 +60,19 @@ def grade_answer(req: EvaluationRequest):
     if len(comments) > 40:
         comments = comments[:37] + "..."
         
+    # verify feedback for hallucinations (PS2 Integration)
+    reliability_data = evaluator.verify_feedback(
+        r_text=r_text,
+        ans_text=req.answer_text,
+        generated_feedback=comments
+    )
+        
     return EvaluationResponse(
         score=marks,
         max_score=max_marks,
         feedback=comments,
-        duplicate_flag=is_copied
+        duplicate_flag=is_copied,
+        reliability=reliability_data
     )
 
 if __name__ == "__main__":

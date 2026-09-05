@@ -5,7 +5,7 @@ import os
 try:
     import torch
     from transformers import pipeline
-    HAS_TORCH = True
+    HAS_TORCH = False # Forced to False due to low disk space
 except ImportError:
     HAS_TORCH = False
     import requests
@@ -90,3 +90,56 @@ class AIEngine:
         except Exception as e:
             print("parse error ->", e)
             return 0.0, 10.0, "parsing failed"
+
+    def verify_feedback(self, r_text: str, ans_text: str, generated_feedback: str):
+        """
+        Stage 2 Verifier (PS2): Checks the generated feedback for contradictions or hallucinations
+        against the rubric and student's answer.
+        """
+        import re
+        
+        # Local keyword verification algorithm to simulate NLI engine.
+        # This acts as our lightweight "Verifier" to operate within memory limits.
+        
+        words = re.findall(r'\b[a-zA-Z]{6,}\b', generated_feedback.lower()) # Check significant words
+        context = (r_text + " " + ans_text).lower()
+        
+        flagged_spans = []
+        suspicious_words = 0
+        
+        # Words commonly used in feedback that shouldn't be flagged
+        safe_words = {"because", "missing", "rubric", "answer", "student", "excellent", "provide", "details", "score", "points", "correct", "incorrect", "learning", "example", "examples", "definition"}
+        
+        for word in words:
+            if word not in safe_words and word not in context:
+                suspicious_words += 1
+                start_idx = generated_feedback.lower().find(word)
+                if start_idx != -1:
+                    end_idx = start_idx + len(word)
+                    snippet = generated_feedback[max(0, start_idx-15):min(len(generated_feedback), end_idx+15)]
+                    flagged_spans.append({
+                        "text": f"...{snippet}...",
+                        "reason": f"Concept '{word}' not found in rubric or student answer."
+                    })
+
+        total_words = len(words) if len(words) > 0 else 1
+        hallucination_prob = min(0.95, (suspicious_words / total_words) * 1.5)
+        
+        # Cap at 3 flags to not overwhelm UI
+        flagged_spans = flagged_spans[:3]
+        
+        reliability_score = (1.0 - hallucination_prob) * 100.0
+        
+        if reliability_score > 85:
+            verdict = "Trustworthy"
+        elif reliability_score > 65:
+            verdict = "Partially Reliable"
+        else:
+            verdict = "Potential Hallucination"
+            
+        return {
+            "reliability_score": round(reliability_score, 1),
+            "hallucination_probability": round(hallucination_prob, 2),
+            "verdict": verdict,
+            "flagged_spans": flagged_spans
+        }

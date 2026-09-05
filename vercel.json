@@ -12,17 +12,12 @@
   ],
   "routes": [
     {
-<<<<<<< HEAD
       "src": "/api/(.*)",
       "dest": "main.py"
     },
     {
       "src": "/(.*)",
       "dest": "index.html"
-=======
-      "src": "/(.*)",
-      "dest": "main.py"
->>>>>>> fb623f6 (Save my local work before pulling remote)
     }
   ]
 }
